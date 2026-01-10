@@ -8,8 +8,8 @@
 
   # Proxmox LXC specific options
   proxmoxLXC = {
-    manageNetwork = true;    # ネットワークはNixで管理
-    manageHostName = true;   # ホスト名もNixで管理
+    manageNetwork = false;   # ネットワークはProxmoxで管理
+    manageHostName = true;   # ホスト名はNixで管理
   };
 
   # System basics
