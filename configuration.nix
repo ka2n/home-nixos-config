@@ -114,16 +114,6 @@
     }];
   };
 
-  # Zigbee USB adapter udev rules
-  services.udev.packages = lib.singleton (pkgs.writeTextFile {
-    name = "zigbee-usb-rules";
-    text = ''
-      # Sonoff Zigbee 3.0 USB Dongle Plus (CP210x)
-      SUBSYSTEM=="tty", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", SYMLINK+="zigbee", MODE="0660", GROUP="zigbee2mqtt"
-    '';
-    destination = "/etc/udev/rules.d/99-zigbee-usb.rules";
-  });
-
   # zigbee2mqtt service
   services.zigbee2mqtt = {
     enable = true;
@@ -148,6 +138,10 @@
   # Create secret.yaml for zigbee2mqtt from sops secrets
   systemd.services.zigbee2mqtt = {
     preStart = ''
+      # Set USB device permissions (LXC containers don't run udevd)
+      chgrp zigbee2mqtt /dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_da0e4f7857c9eb119dfb8f4f1d69213e-if00-port0 || true
+      chmod 660 /dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_da0e4f7857c9eb119dfb8f4f1d69213e-if00-port0 || true
+
       # Convert hex string network key to array format
       NETWORK_KEY_HEX=$(cat ${config.sops.secrets.zigbee-network-key.path})
       NETWORK_KEY_ARRAY="["
