@@ -115,10 +115,14 @@
   };
 
   # Zigbee USB adapter udev rules
-  services.udev.extraRules = ''
-    # Sonoff Zigbee 3.0 USB Dongle Plus (CP210x)
-    SUBSYSTEM=="tty", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", SYMLINK+="zigbee", MODE="0660", GROUP="zigbee2mqtt"
-  '';
+  services.udev.packages = lib.singleton (pkgs.writeTextFile {
+    name = "zigbee-usb-rules";
+    text = ''
+      # Sonoff Zigbee 3.0 USB Dongle Plus (CP210x)
+      SUBSYSTEM=="tty", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", SYMLINK+="zigbee", MODE="0660", GROUP="zigbee2mqtt"
+    '';
+    destination = "/etc/udev/rules.d/99-zigbee-usb.rules";
+  });
 
   # zigbee2mqtt service
   services.zigbee2mqtt = {
