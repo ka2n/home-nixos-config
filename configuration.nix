@@ -128,6 +128,7 @@
       };
       frontend = {
         port = 8080;
+        host = "0.0.0.0";
       };
       advanced = {
         network_key = "!secret network_key";
