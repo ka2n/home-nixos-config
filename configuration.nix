@@ -156,8 +156,8 @@
   # Create secret.yaml for zigbee2mqtt from sops secrets
   systemd.services.zigbee2mqtt = {
     preStart = ''
-      # Set USB device group (LXC containers don't run udevd)
-      chgrp zigbee2mqtt /dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_da0e4f7857c9eb119dfb8f4f1d69213e-if00-port0 || true
+      # Set USB device permissions (LXC containers don't run udevd)
+      chown zigbee2mqtt:zigbee2mqtt /dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_da0e4f7857c9eb119dfb8f4f1d69213e-if00-port0 || true
 
       # Convert hex string network key to array format
       NETWORK_KEY_HEX=$(cat ${config.sops.secrets.zigbee-network-key.path})
