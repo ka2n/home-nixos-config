@@ -9,10 +9,12 @@
   boot.loader.grub.enable = false;
   boot.loader.systemd-boot.enable = false;  # LXC doesn't need bootloader
 
-  # LXC container specific - disable kernel filesystem mounts
-  boot.enableContainers = lib.mkForce false;
-  systemd.mounts = lib.mkForce [];
-  systemd.automounts = lib.mkForce [];
+  # LXC container specific - suppress kernel filesystem mounts
+  systemd.suppressedSystemUnits = [
+    "dev-mqueue.mount"
+    "sys-kernel-debug.mount"
+    "sys-fs-fuse-connections.mount"
+  ];
 
   networking.hostName = "sensors";
 
