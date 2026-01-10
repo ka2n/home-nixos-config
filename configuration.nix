@@ -137,13 +137,10 @@
   # Create secret.yaml for zigbee2mqtt from sops secrets
   systemd.services.zigbee2mqtt = {
     preStart = ''
-      mkdir -p /var/lib/zigbee2mqtt
       cat > /var/lib/zigbee2mqtt/secret.yaml <<EOF
       mqtt_password: $(cat ${config.sops.secrets.mqtt-zigbee2mqtt-password.path})
       network_key: $(cat ${config.sops.secrets.zigbee-network-key.path})
       EOF
-      chown zigbee2mqtt:zigbee2mqtt /var/lib/zigbee2mqtt/secret.yaml
-      chmod 600 /var/lib/zigbee2mqtt/secret.yaml
     '';
   };
 
