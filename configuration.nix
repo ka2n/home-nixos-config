@@ -1,9 +1,16 @@
-{ config, pkgs, lib, inputs, ... }:
+{ config, pkgs, lib, inputs, modulesPath, ... }:
 
 {
   imports = [
     ./hardware-configuration.nix
+    (modulesPath + "/virtualisation/proxmox-lxc.nix")
   ];
+
+  # Proxmox LXC specific options
+  proxmoxLXC = {
+    manageNetwork = true;    # ネットワークはNixで管理
+    manageHostName = true;   # ホスト名もNixで管理
+  };
 
   # System basics
   boot.loader.grub.enable = false;
