@@ -1,0 +1,16 @@
+# Build results
+result
+result-*
+
+# Nix build artifacts
+.direnv/
+
+# Backup files (unencrypted)
+secrets/*.bak
+secrets/*.unencrypted
+secrets/*~
+
+# Editor temporary files
+*~
+.*.swp
+.*.swo
