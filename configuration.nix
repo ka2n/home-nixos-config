@@ -118,21 +118,38 @@
   services.zigbee2mqtt = {
     enable = true;
     settings = {
+      # Availability checking
+      availability = {
+        active.timeout = 5;
+        passive.timeout = 1500;
+      };
+
       mqtt = {
         server = "mqtt://localhost:1883";
         user = "zigbee2mqtt";
         password = "!secret mqtt_password";
       };
+
       serial = {
         port = "/dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_da0e4f7857c9eb119dfb8f4f1d69213e-if00-port0";
+        adapter = "zstack";
+        disable_led = true;
       };
+
       frontend = {
         port = 8080;
         host = "0.0.0.0";
       };
+
       advanced = {
         network_key = "!secret network_key";
+        channel = 15;  # Use same channel as existing network
+        pan_id = "GENERATE";  # Or use specific pan_id from existing network
+        last_seen = "ISO_8601";
       };
+
+      # Home Assistant integration
+      homeassistant.enabled = true;
     };
   };
 
