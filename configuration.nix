@@ -63,7 +63,7 @@
   # Secrets management with sops-nix
   sops = {
     defaultSopsFile = ./secrets/secrets.yaml;
-    age.keyFile = "/var/lib/sops-nix/key.txt";
+    age.sshKeyPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
 
     secrets = {
       # mosquitto/zigbee2mqtt
@@ -144,9 +144,21 @@
   # Create secret.yaml for zigbee2mqtt from sops secrets
   systemd.services.zigbee2mqtt = {
     preStart = ''
+      # Convert hex string network key to array format
+      NETWORK_KEY_HEX=$(cat ${config.sops.secrets.zigbee-network-key.path})
+      NETWORK_KEY_ARRAY="["
+      for i in $(seq 0 2 30); do
+        BYTE="0x''${NETWORK_KEY_HEX:$i:2}"
+        NETWORK_KEY_ARRAY="$NETWORK_KEY_ARRAY$((16#''${NETWORK_KEY_HEX:$i:2}))"
+        if [ $i -lt 30 ]; then
+          NETWORK_KEY_ARRAY="$NETWORK_KEY_ARRAY, "
+        fi
+      done
+      NETWORK_KEY_ARRAY="$NETWORK_KEY_ARRAY]"
+
       cat > /var/lib/zigbee2mqtt/secret.yaml <<EOF
       mqtt_password: $(cat ${config.sops.secrets.mqtt-zigbee2mqtt-password.path})
-      network_key: $(cat ${config.sops.secrets.zigbee-network-key.path})
+      network_key: $NETWORK_KEY_ARRAY
       EOF
     '';
   };
