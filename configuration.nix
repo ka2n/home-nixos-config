@@ -143,8 +143,8 @@
 
       advanced = {
         network_key = "!secret network_key";
-        channel = 15;  # Use same channel as existing network
-        pan_id = "GENERATE";  # Or use specific pan_id from existing network
+        channel = 15;
+        pan_id = 6754;  # Existing network PAN ID
         last_seen = "ISO_8601";
       };
 
