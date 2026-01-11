@@ -125,7 +125,7 @@
       };
 
       mqtt = {
-        server = "mqtt://localhost:1883";
+        server = "mqtt://sensors.local:1883";
         user = "zigbee2mqtt";
         password = "!secret mqtt_password";
       };
@@ -201,7 +201,7 @@
         extraOptions = [ "--network=host" ];
 
         environment = {
-          MQTT_BROKER = "mqtt://localhost:1883";
+          MQTT_BROKER = "mqtt://sensors.local:1883";
           MQTT_USERNAME = "echonetlite2mqtt";
           ECHONET_TARGET_NETWORK = "192.168.50.0/24";
           REST_API_PORT = "3000";
@@ -225,7 +225,7 @@
         extraOptions = [ "--network=host" ];
 
         environment = {
-          HAMH_HOME_ASSISTANT_URL = "http://192.168.50.201:8123";
+          HAMH_HOME_ASSISTANT_URL = "http://homeassistant.local:8123";
           HAMH_HTTP_PORT = "8482";
           HAMH_LOG_LEVEL = "info";
         };
