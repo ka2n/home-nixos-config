@@ -61,7 +61,6 @@
 
     # Enable mDNS reflection for LXC containers
     reflector = true;
-    allowInterfaces = [ "eth0" ];
   };
 
   # Secrets management with sops-nix
