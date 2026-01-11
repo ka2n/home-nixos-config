@@ -228,7 +228,7 @@
         extraOptions = [ "--network=host" ];
 
         environment = {
-          HAMH_HOME_ASSISTANT_URL = "http://homeassistant.local:8123";
+          HAMH_HOME_ASSISTANT_URL = "http://192.168.50.201:8123";
           HAMH_HTTP_PORT = "8482";
           HAMH_LOG_LEVEL = "info";
         };
