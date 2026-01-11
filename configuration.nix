@@ -128,7 +128,7 @@
       };
 
       mqtt = {
-        server = "mqtt://sensors.local:1883";
+        server = "mqtt://localhost:1883";
         user = "zigbee2mqtt";
         password = "!secret mqtt_password";
       };
@@ -204,7 +204,7 @@
         extraOptions = [ "--network=host" ];
 
         environment = {
-          MQTT_BROKER = "mqtt://sensors.local:1883";
+          MQTT_BROKER = "mqtt://localhost:1883";
           MQTT_USERNAME = "echonetlite2mqtt";
           ECHONET_TARGET_NETWORK = "192.168.50.0/24";
           REST_API_PORT = "3000";
