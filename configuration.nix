@@ -35,6 +35,7 @@
     firewall = {
       enable = true;
       allowedTCPPorts = [
+        1883   # MQTT (Mosquitto)
         8080   # zigbee2mqtt frontend
         8482   # home-assistant-matter-hub UI
         3000   # echonetlite2mqtt UI
@@ -78,6 +79,10 @@
         owner = "mosquitto";
         group = "mosquitto";
       };
+      mqtt-homeassistant-password = {
+        owner = "mosquitto";
+        group = "mosquitto";
+      };
       zigbee-network-key = {
         owner = "zigbee2mqtt";
         group = "zigbee2mqtt";
@@ -99,7 +104,7 @@
   services.mosquitto = {
     enable = true;
     listeners = [{
-      address = "127.0.0.1";
+      address = "0.0.0.0";
       port = 1883;
       users = {
         zigbee2mqtt = {
@@ -109,6 +114,10 @@
         echonetlite2mqtt = {
           acl = [ "readwrite #" ];
           passwordFile = config.sops.secrets.mqtt-echonetlite2mqtt-password.path;
+        };
+        homeassistant = {
+          acl = [ "readwrite #" ];
+          passwordFile = config.sops.secrets.mqtt-homeassistant-password.path;
         };
       };
       settings = {
