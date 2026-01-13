@@ -16,20 +16,17 @@ e2m-hass-bridge-device-config = pkgs.writeText "e2m-device-config.json" (builtin
 
 ## メーカーコード一覧
 
-主要メーカーのコード:
+主要メーカーのコード（e2m-hass-bridge deviceConfig.tsより）:
 
 | メーカー | コード |
 |---------|-------|
-| Panasonic | `000009` |
-| Sharp | `000005` |
-| Daikin | `00000e` |
-| Mitsubishi | `000011` |
-| Hitachi | `000022` |
-| Toshiba | `000029` |
-| Fujitsu | `000030` |
-| Corona | `000067` |
+| Panasonic (パナソニック) | `00000b` |
+| Mitsubishi Electric (三菱電機) | `000006` |
+| Fujitsu General (富士通ゼネラル) | `00008a` |
+| Rinnai (リンナイ) | `000059` |
+| Nature (Nature Remo) | `000106` |
 
-完全なリストは[ECHONET Lite検索サイト](https://echonet-lite.ka2n.dev/)で検索可能。
+完全なリストは`external-docs/e2m-hass-bridge/src/deviceConfig.ts`の`Manufacturer`定数または[ECHONET Lite検索サイト](https://echonet-lite.ka2n.dev/)で検索可能。
 
 ## 基本構造
 
@@ -54,7 +51,7 @@ e2m-hass-bridge-device-config = pkgs.writeText "e2m-device-config.json" (builtin
 ### 1. 温度範囲の変更（最も一般的）
 
 ```nix
-"000009" = {  # Panasonic
+"00000b" = {  # Panasonic
   override.composite.climate = {
     min_temp = 18;  # デフォルト: 16
     max_temp = 28;  # デフォルト: 30
@@ -66,16 +63,16 @@ e2m-hass-bridge-device-config = pkgs.writeText "e2m-device-config.json" (builtin
 
 ```nix
 e2m-hass-bridge-device-config = pkgs.writeText "e2m-device-config.json" (builtins.toJSON {
-  "000009" = {  # Panasonic
+  "00000b" = {  # Panasonic
     override.composite.climate = {
       min_temp = 18;
       max_temp = 28;
     };
   };
-  "000005" = {  # Sharp
+  "000006" = {  # Mitsubishi Electric
     override.composite.climate = {
-      min_temp = 17;
-      max_temp = 32;
+      min_temp = 16;
+      max_temp = 30;
     };
   };
 });
@@ -86,7 +83,7 @@ e2m-hass-bridge-device-config = pkgs.writeText "e2m-device-config.json" (builtin
 ECHONET Lite機器が自動で通知しないプロパティを定期的に取得:
 
 ```nix
-"000009" = {
+"00000b" = {
   autoRequestProperties = {
     homeAirConditioner = [
       "operationStatus"
@@ -108,7 +105,7 @@ ECHONET Lite機器が自動で通知しないプロパティを定期的に取�
 Home AssistantとECHONET Liteのファンモード値の変換:
 
 ```nix
-"000009" = {
+"00000b" = {
   climate.fanmodeMapping = {
     command = {  # HA → ECHONET
       auto = "auto";
@@ -136,7 +133,7 @@ Home AssistantとECHONET Liteのファンモード値の変換:
 
 ```nix
 e2m-hass-bridge-device-config = pkgs.writeText "e2m-device-config.json" (builtins.toJSON {
-  "000009" = {  # Panasonic Eolia
+  "00000b" = {  # Panasonic Eolia
     override = {
       composite = {
         climate = {
