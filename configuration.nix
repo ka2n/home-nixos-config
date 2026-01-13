@@ -400,7 +400,7 @@
         };
       };
 
-      # リンナイ（ガスメータ）
+      # リンナイ（ガスメータ、床暖房）
       "000059" = {
         override = {
           simple = {
@@ -411,6 +411,12 @@
               };
             };
           };
+        };
+        autoRequestProperties = {
+          floorHeater = [
+            "operationStatus"      # 0x80 - オンオフ
+            "setTemperature"       # 0xB3 - 設定温度
+          ];
         };
       };
     });
