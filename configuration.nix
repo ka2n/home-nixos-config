@@ -1,88 +1,5 @@
 { config, pkgs, lib, inputs, modulesPath, ... }:
 
-let
-  # Custom packages
-  e2m-hass-bridge = pkgs.callPackage ./pkgs/e2m-hass-bridge/package.nix {};
-
-  # e2m-hass-bridge device configuration override
-  # カスタマイズガイド: docs/e2m-hass-bridge-customization.md
-  # 元の設定: external-docs/e2m-hass-bridge/src/deviceConfig.ts
-  #
-  # メーカーコード検索: https://echonet-lite.ka2n.dev/
-  #   主要メーカー: 000009=Panasonic, 000005=Sharp, 00000e=Daikin, 000011=Mitsubishi
-  #
-  # マージルール:
-  #   - オブジェクト: 再帰的にマージ（部分的な変更が可能）
-  #   - 配列: 完全置換（元の値も含めて全て記述する必要あり）
-  #   - 未指定のキー: 元の設定を保持
-  e2m-hass-bridge-device-config = pkgs.writeText "e2m-device-config.json" (builtins.toJSON {
-    # Panasonic Eolia エアコンの設定
-    "000009" = {
-      # 温度範囲の変更
-      override = {
-        composite = {
-          climate = {
-            min_temp = 18;  # デフォルト: 16
-            max_temp = 28;  # デフォルト: 30
-          };
-        };
-      };
-      # 定期的にリクエストするプロパティ（配列は完全置換される）
-      autoRequestProperties = {
-        homeAirConditioner = [
-          "operationStatus"
-          "operationMode"
-          "targetTemperature"
-          "airFlowLevel"
-          "airFlowDirectionVertical"
-          "automaticControlAirFlowDirection"
-          "roomTemperature"
-          "humidity"
-        ];
-        electricWaterHeater = [ "remainingWater" ];
-      };
-      # ファンモードマッピング（Home Assistant ⇔ ECHONET Lite）
-      climate = {
-        fanmodeMapping = {
-          # Home Assistant → ECHONET Lite
-          command = {
-            auto = "auto";
-            "1" = "2";
-            "2" = "3";
-            "3" = "4";
-            "4" = "6";
-          };
-          # ECHONET Lite → Home Assistant
-          state = {
-            auto = "auto";
-            "1" = "1";
-            "2" = "1";
-            "3" = "2";
-            "4" = "3";
-            "5" = "3";
-            "6" = "4";
-            "7" = "4";
-            "8" = "4";
-          };
-        };
-      };
-    };
-
-    # 複数メーカーの設定例（コメントアウト）
-    # "000005" = {  # Sharp
-    #   override.composite.climate = {
-    #     min_temp = 17;
-    #     max_temp = 32;
-    #   };
-    # };
-    # "00000e" = {  # Daikin
-    #   override.composite.climate = {
-    #     min_temp = 16;
-    #     max_temp = 31;
-    #   };
-    # };
-  });
-in
 {
   imports = [
     ./hardware-configuration.nix
@@ -360,7 +277,130 @@ in
   };
 
   # e2m-hass-bridge service
-  systemd.services.e2m-hass-bridge = {
+  systemd.services.e2m-hass-bridge = let
+    # Custom packages
+    e2m-hass-bridge = pkgs.callPackage ./pkgs/e2m-hass-bridge/package.nix {};
+
+    # e2m-hass-bridge device configuration override
+    # カスタマイズガイド: docs/e2m-hass-bridge-customization.md
+    # 元の設定: external-docs/e2m-hass-bridge/src/deviceConfig.ts
+    # 調査結果: external-docs/echonet-device-investigation-summary.md
+    #
+    # メーカーコード検索: https://echonet-lite.ka2n.dev/
+    #   主要メーカー: 00000b=Panasonic, 000006=Mitsubishi, 00008a=Fujitsu General
+    #
+    # マージルール:
+    #   - オブジェクト: 再帰的にマージ（部分的な変更が可能）
+    #   - 配列: 完全置換（元の値も含めて全て記述する必要あり）
+    #   - 未指定のキー: 元の設定を保持
+    e2m-hass-bridge-device-config = pkgs.writeText "e2m-device-config.json" (builtins.toJSON {
+      # Global設定（全デバイス共通）
+      "global" = {
+        autoRequestProperties = {
+          # 太陽光発電の定期更新（HASSエネルギータブ対応）
+          pvPowerGeneration = [
+            "instantaneousElectricPowerGeneration"  # 0xE0 - 瞬時発電電力（W）
+            "cumulativeElectricEnergyOfGeneration"  # 0xE1 - 累積発電電力量（kWh）
+          ];
+          # 分電盤メーターの定期更新（買電/売電データ）
+          powerDistributionBoardMetering = [
+            "normalDirectionCumulativeElectricEnergy"   # 買電累積（kWh）
+            "reverseDirectionCumulativeElectricEnergy"  # 売電累積（kWh）
+            "instantaneousElectricPower"                # 瞬時電力（W）
+          ];
+        };
+      };
+
+      # 三菱電機（霧ヶ峰エアコン）
+      "000006" = {
+        override = {
+          composite = {
+            climate = {
+              min_temp = 16;
+              max_temp = 30;
+              icon = "mdi:air-conditioner";
+            };
+          };
+        };
+        autoRequestProperties = {
+          homeAirConditioner = [
+            "operationStatus"              # 0x80 - 動作状態
+            "operationMode"                # 0xB0 - 運転モード
+            "targetTemperature"            # 0xB3 - 設定温度
+            "roomTemperature"              # 0xBB - 室内温度
+            "airFlowLevel"                 # 0xA0 - 風量設定
+            "airFlowDirectionVertical"     # 0xA4 - 風向（上下）
+            "automaticControlAirFlowDirection" # 0xA1 - 風向自動設定
+          ];
+        };
+        climate = {
+          fanmodeMapping = {
+            command = {
+              auto = "auto";
+              "1" = "1";
+              "2" = "2";
+              "3" = "3";
+              "4" = "4";
+              "5" = "5";
+            };
+            state = {
+              auto = "auto";
+              "1" = "1";
+              "2" = "2";
+              "3" = "3";
+              "4" = "4";
+              "5" = "5";
+            };
+          };
+        };
+      };
+
+      # 富士通ゼネラル（ノクリアエアコン）
+      "00008a" = {
+        override = {
+          composite = {
+            climate = {
+              min_temp = 16;
+              max_temp = 30;
+              icon = "mdi:air-conditioner";
+            };
+          };
+        };
+        autoRequestProperties = {
+          homeAirConditioner = [
+            "operationStatus"              # 0x80
+            "operationMode"                # 0xB0
+            "targetTemperature"            # 0xB3
+            "roomTemperature"              # 0xBB
+            "airFlowLevel"                 # 0xA0
+            "airFlowDirectionVertical"     # 0xA4
+            "automaticControlAirFlowDirection" # 0xA1
+            "humidity"                     # 0xBA（対応機種のみ）
+          ];
+        };
+        climate = {
+          fanmodeMapping = {
+            command = {
+              auto = "auto";
+              "1" = "1";
+              "2" = "2";
+              "3" = "3";
+              "4" = "4";
+              "5" = "5";
+            };
+            state = {
+              auto = "auto";
+              "1" = "1";
+              "2" = "2";
+              "3" = "3";
+              "4" = "4";
+              "5" = "5";
+            };
+          };
+        };
+      };
+    });
+  in {
     description = "Bridge between echonetlite2mqtt and Home Assistant";
     after = [ "network.target" "mosquitto.service" ];
     wants = [ "mosquitto.service" ];
@@ -375,7 +415,7 @@ in
       LOG_LEVEL = "info";
       DESCRIPTION_LANGUAGE = "ja";
       MQTT_TASK_INTERVAL = "100";
-      AUTO_REQUEST_INTERVAL = "180000";
+      AUTO_REQUEST_INTERVAL = "60000";  # 60秒（エアコンと太陽光発電の定期更新）
       DEVICE_CONFIG_OVERRIDE_PATH = "${e2m-hass-bridge-device-config}";
     };
 
