@@ -399,6 +399,20 @@
           };
         };
       };
+
+      # リンナイ（ガスメータ）
+      "000059" = {
+        override = {
+          simple = {
+            gasMeter = {
+              cumulativeGasConsumption = {
+                device_class = "gas";
+                state_class = "total_increasing";
+              };
+            };
+          };
+        };
+      };
     });
   in {
     description = "Bridge between echonetlite2mqtt and Home Assistant";
