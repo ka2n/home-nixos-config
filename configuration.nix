@@ -294,8 +294,8 @@
     #   - 配列: 完全置換（元の値も含めて全て記述する必要あり）
     #   - 未指定のキー: 元の設定を保持
     e2m-hass-bridge-device-config = pkgs.writeText "e2m-device-config.json" (builtins.toJSON {
-      # Global設定（全デバイス共通）
-      "global" = {
+      # パナソニック（太陽光発電、分電盤メーター）
+      "00000b" = {
         autoRequestProperties = {
           # 太陽光発電の定期更新（HASSエネルギータブ対応）
           pvPowerGeneration = [
