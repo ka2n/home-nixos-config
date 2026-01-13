@@ -1,5 +1,88 @@
 { config, pkgs, lib, inputs, modulesPath, ... }:
 
+let
+  # Custom packages
+  e2m-hass-bridge = pkgs.callPackage ./pkgs/e2m-hass-bridge/package.nix {};
+
+  # e2m-hass-bridge device configuration override
+  # カスタマイズガイド: docs/e2m-hass-bridge-customization.md
+  # 元の設定: external-docs/e2m-hass-bridge/src/deviceConfig.ts
+  #
+  # メーカーコード検索: https://echonet-lite.ka2n.dev/
+  #   主要メーカー: 000009=Panasonic, 000005=Sharp, 00000e=Daikin, 000011=Mitsubishi
+  #
+  # マージルール:
+  #   - オブジェクト: 再帰的にマージ（部分的な変更が可能）
+  #   - 配列: 完全置換（元の値も含めて全て記述する必要あり）
+  #   - 未指定のキー: 元の設定を保持
+  e2m-hass-bridge-device-config = pkgs.writeText "e2m-device-config.json" (builtins.toJSON {
+    # Panasonic Eolia エアコンの設定
+    "000009" = {
+      # 温度範囲の変更
+      override = {
+        composite = {
+          climate = {
+            min_temp = 18;  # デフォルト: 16
+            max_temp = 28;  # デフォルト: 30
+          };
+        };
+      };
+      # 定期的にリクエストするプロパティ（配列は完全置換される）
+      autoRequestProperties = {
+        homeAirConditioner = [
+          "operationStatus"
+          "operationMode"
+          "targetTemperature"
+          "airFlowLevel"
+          "airFlowDirectionVertical"
+          "automaticControlAirFlowDirection"
+          "roomTemperature"
+          "humidity"
+        ];
+        electricWaterHeater = [ "remainingWater" ];
+      };
+      # ファンモードマッピング（Home Assistant ⇔ ECHONET Lite）
+      climate = {
+        fanmodeMapping = {
+          # Home Assistant → ECHONET Lite
+          command = {
+            auto = "auto";
+            "1" = "2";
+            "2" = "3";
+            "3" = "4";
+            "4" = "6";
+          };
+          # ECHONET Lite → Home Assistant
+          state = {
+            auto = "auto";
+            "1" = "1";
+            "2" = "1";
+            "3" = "2";
+            "4" = "3";
+            "5" = "3";
+            "6" = "4";
+            "7" = "4";
+            "8" = "4";
+          };
+        };
+      };
+    };
+
+    # 複数メーカーの設定例（コメントアウト）
+    # "000005" = {  # Sharp
+    #   override.composite.climate = {
+    #     min_temp = 17;
+    #     max_temp = 32;
+    #   };
+    # };
+    # "00000e" = {  # Daikin
+    #   override.composite.climate = {
+    #     min_temp = 16;
+    #     max_temp = 31;
+    #   };
+    # };
+  });
+in
 {
   imports = [
     ./hardware-configuration.nix
@@ -39,6 +122,7 @@
         8080   # zigbee2mqtt frontend
         8482   # home-assistant-matter-hub UI
         3000   # echonetlite2mqtt UI
+        3001   # e2m-hass-bridge UI
         5540   # Matter bridge (primary)
       ];
       allowedUDPPorts = [
@@ -97,6 +181,16 @@
         format = "dotenv";
         sopsFile = ./secrets/home-assistant-matter-hub.env;
       };
+
+      # e2m-hass-bridge
+      mqtt-e2m-hass-bridge-password = {
+        owner = "mosquitto";
+        group = "mosquitto";
+      };
+      e2m-hass-bridge-env = {
+        format = "dotenv";
+        sopsFile = ./secrets/e2m-hass-bridge.env;
+      };
     };
   };
 
@@ -118,6 +212,10 @@
         homeassistant = {
           acl = [ "readwrite #" ];
           passwordFile = config.sops.secrets.mqtt-homeassistant-password.path;
+        };
+        e2m-hass-bridge = {
+          acl = [ "readwrite #" ];
+          passwordFile = config.sops.secrets.mqtt-e2m-hass-bridge-password.path;
         };
       };
       settings = {
@@ -258,6 +356,50 @@
     enable = true;
     daemon.settings = {
       registry-mirrors = [ "https://mirror.gcr.io" ];
+    };
+  };
+
+  # e2m-hass-bridge service
+  systemd.services.e2m-hass-bridge = {
+    description = "Bridge between echonetlite2mqtt and Home Assistant";
+    after = [ "network.target" "mosquitto.service" ];
+    wants = [ "mosquitto.service" ];
+    wantedBy = [ "multi-user.target" ];
+
+    environment = {
+      MQTT_BROKER = "mqtt://localhost:1883";
+      MQTT_USERNAME = "e2m-hass-bridge";
+      ECHONETLITE2MQTT_BASE_TOPIC = "echonetlite2mqtt/elapi/v2/devices";
+      HA_DISCOVERY_PREFIX = "homeassistant";
+      PORT = "3001";
+      LOG_LEVEL = "info";
+      DESCRIPTION_LANGUAGE = "ja";
+      MQTT_TASK_INTERVAL = "100";
+      AUTO_REQUEST_INTERVAL = "180000";
+      DEVICE_CONFIG_OVERRIDE_PATH = "${e2m-hass-bridge-device-config}";
+    };
+
+    serviceConfig = {
+      EnvironmentFile = config.sops.secrets.e2m-hass-bridge-env.path;
+      Type = "simple";
+      ExecStart = "${e2m-hass-bridge}/bin/e2m-hass-bridge";
+      Restart = "always";
+      RestartSec = "10s";
+
+      DynamicUser = true;
+      StateDirectory = "e2m-hass-bridge";
+      WorkingDirectory = "/var/lib/e2m-hass-bridge";
+
+      # Security hardening
+      NoNewPrivileges = true;
+      PrivateTmp = true;
+      ProtectSystem = "strict";
+      ProtectHome = true;
+      ReadWritePaths = [ "/var/lib/e2m-hass-bridge" ];
+      PrivateNetwork = false;
+
+      StandardOutput = "journal";
+      StandardError = "journal";
     };
   };
 

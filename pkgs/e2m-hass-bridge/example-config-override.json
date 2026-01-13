@@ -1,0 +1,46 @@
+{
+  "000009": {
+    "override": {
+      "composite": {
+        "climate": {
+          "min_temp": 18,
+          "max_temp": 28
+        }
+      }
+    },
+    "autoRequestProperties": {
+      "homeAirConditioner": [
+        "operationStatus",
+        "operationMode",
+        "targetTemperature",
+        "airFlowLevel",
+        "airFlowDirectionVertical",
+        "automaticControlAirFlowDirection",
+        "roomTemperature",
+        "humidity"
+      ]
+    },
+    "climate": {
+      "fanmodeMapping": {
+        "command": {
+          "auto": "auto",
+          "1": "2",
+          "2": "3",
+          "3": "4",
+          "4": "6"
+        },
+        "state": {
+          "auto": "auto",
+          "1": "1",
+          "2": "1",
+          "3": "2",
+          "4": "3",
+          "5": "3",
+          "6": "4",
+          "7": "4",
+          "8": "4"
+        }
+      }
+    }
+  }
+}
