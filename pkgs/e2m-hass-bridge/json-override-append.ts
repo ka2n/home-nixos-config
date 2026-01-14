@@ -1,6 +1,7 @@
 
 /**
- * Deep merge utility for configuration objects
+ * Deep merge utility for configuration objects with key deletion support
+ * Use "__DELETE__" as value to delete a key
  */
 function deepMerge<T extends Record<string, any>>(target: T, source: Partial<T>): T {
   const result = { ...target };
@@ -9,6 +10,12 @@ function deepMerge<T extends Record<string, any>>(target: T, source: Partial<T>)
     if (source.hasOwnProperty(key)) {
       const sourceValue = source[key];
       const targetValue = result[key];
+
+      // Special marker to delete keys
+      if (sourceValue === "__DELETE__") {
+        delete result[key];
+        continue;
+      }
 
       if (sourceValue === null || sourceValue === undefined) {
         continue;
@@ -51,6 +58,32 @@ function loadConfigOverride(): Partial<Record<ManufacturerCode, DeviceConfig>> {
     console.error(`[deviceConfig] Failed to load configuration override from ${overridePath}:`, error);
     return {};
   }
+}
+
+/**
+ * Shallow merge with deletion support for payload merging
+ * Use "__DELETE__" as value to delete a key
+ */
+export function mergePayloadWithDelete<T extends Record<string, any>>(
+  base: T,
+  override: Partial<T>
+): T {
+  const result = { ...base };
+
+  for (const key in override) {
+    if (override.hasOwnProperty(key)) {
+      const value = override[key];
+
+      // Special marker to delete keys
+      if (value === "__DELETE__") {
+        delete result[key];
+      } else {
+        result[key] = value;
+      }
+    }
+  }
+
+  return result;
 }
 
 // Apply configuration override

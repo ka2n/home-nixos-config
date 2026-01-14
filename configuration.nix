@@ -402,16 +402,6 @@
 
       # リンナイ（ガスメータ、床暖房）
       "000059" = {
-        override = {
-          simple = {
-            gasMeter = {
-              cumulativeGasConsumption = {
-                device_class = "gas";
-                state_class = "total_increasing";
-              };
-            };
-          };
-        };
         autoRequestProperties = {
           gasMeter = [
             "operationStatus"

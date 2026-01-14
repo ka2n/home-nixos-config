@@ -26,6 +26,13 @@ buildNpmPackage rec {
 
     # Append JSON override code
     cat ${./json-override-append.ts} >> src/deviceConfig.ts
+
+    # Patch builder.ts to use mergePayloadWithDelete
+    # 1. Add mergePayloadWithDelete to the import from deviceConfig
+    sed -i 's/import { IgnorePropertyPatterns } from "@\/deviceConfig";/import { IgnorePropertyPatterns, mergePayloadWithDelete } from "@\/deviceConfig";/' src/payload/builder.ts
+
+    # 2. Replace shallow merge with deletion-aware merge
+    sed -i 's/payload: { \.\.\.payload, \.\.\.override }/payload: mergePayloadWithDelete(payload, override)/' src/payload/builder.ts
   '';
 
   buildPhase = ''
