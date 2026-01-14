@@ -7,10 +7,10 @@ index 1234567..abcdefg 100644
  import env from "@/env";
  import type { Payload } from "@/payload/payloadType";
  import {
-@@ -74,5 +75,6 @@ export default function buildSensor(
+@@ -74,5 +75,5 @@ export default function buildSensor(
      payload.device_class = deviceClass;
    }
 
-+  payload = applyCoefficientFix(apiDevice, property, payload);
-   return payload;
+-  return payload;
++  return applyCoefficientFix(apiDevice, property, payload);
  }
