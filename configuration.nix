@@ -405,6 +405,7 @@
         autoRequestProperties = {
           gasMeter = [
             "operationStatus"
+            # うまく device_class=gasとして 認識されないので、stateを使った Template Sensor としてHAS側で再定義しています。
             "cumulativeGasConsumption"
           ];
           floorHeater = [

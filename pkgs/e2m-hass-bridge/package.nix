@@ -20,23 +20,17 @@ buildNpmPackage rec {
   makeCacheWritable = true;
 
   patches = [
+    ./add-json-override-support.patch
     ./fix-power-distribution-board-coefficient.patch
   ];
 
-  # Add JSON override functionality
+  # Add custom modules
   postPatch = ''
-    # Add import statement for readFileSync
-    sed -i '3a import { readFileSync } from "node:fs";' src/deviceConfig.ts
+    # Copy coefficient fix module
+    cp ${./apply-coefficient-fix.ts} src/payload/readonly/coefficient-fix.ts
 
-    # Append JSON override code
-    cat ${./json-override-append.ts} >> src/deviceConfig.ts
-
-    # Patch builder.ts to use mergePayloadWithDelete
-    # 1. Add mergePayloadWithDelete to the import from deviceConfig
-    sed -i 's/import { IgnorePropertyPatterns } from "@\/deviceConfig";/import { IgnorePropertyPatterns, mergePayloadWithDelete } from "@\/deviceConfig";/' src/payload/builder.ts
-
-    # 2. Replace shallow merge with deletion-aware merge
-    sed -i 's/payload: { \.\.\.payload, \.\.\.override }/payload: mergePayloadWithDelete(payload, override)/' src/payload/builder.ts
+    # Copy device config override module
+    cp ${./deviceConfigOverride.ts} src/deviceConfigOverride.ts
   '';
 
   buildPhase = ''

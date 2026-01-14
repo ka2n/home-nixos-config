@@ -1,0 +1,53 @@
+diff --git a/src/deviceConfig.ts b/src/deviceConfig.ts
+index 1234567..abcdefg 100644
+--- a/src/deviceConfig.ts
++++ b/src/deviceConfig.ts
+@@ -1,6 +1,7 @@
+ // ご自宅の家電で正しく動作しない場合はPRをお願いします。
+ // https://github.com/nana4rider/e2m-hass-bridge/pulls
+ import type { CompositeComponentId, Payload } from "@/payload/payloadType";
++import { deepMerge, loadConfigOverride, mergePayloadWithDelete } from "./deviceConfigOverride";
+
+ /**
+  * メーカーコード → 会社名のマッピング
+@@ -450,3 +451,11 @@ export interface OverrideConfig {
+     [id in CompositeComponentId]: Payload;
+   }>;
+ }
++
++// Apply configuration override
++const configOverride = loadConfigOverride();
++for (const manufacturer in configOverride) {
++  const manufacturerCode = manufacturer as ManufacturerCode;
++  const existing = (ManufacturerDeviceConfig as Record<string, DeviceConfig>)[manufacturerCode] || {};
++  (ManufacturerDeviceConfig as Record<string, DeviceConfig>)[manufacturerCode] = deepMerge(existing, configOverride[manufacturerCode]!);
++}
+diff --git a/src/payload/builder.ts b/src/payload/builder.ts
+index 1234567..abcdefg 100644
+--- a/src/payload/builder.ts
++++ b/src/payload/builder.ts
+@@ -1,4 +1,4 @@
+-import { IgnorePropertyPatterns } from "@/deviceConfig";
++import { IgnorePropertyPatterns } from "@/deviceConfig";
++import { mergePayloadWithDelete } from "@/deviceConfigOverride";
+ import env from "@/env";
+ import logger from "@/logger";
+ import buildClimate from "@/payload/composite/climate";
+@@ -139,7 +140,7 @@ export function buildDiscoveryConfig(apiDevice: ApiDevice): DiscoveryEntry[] {
+
+     discoveryEntries.push({
+       relativeTopic,
+-      payload: { ...payload, ...override },
++      payload: mergePayloadWithDelete(payload, override),
+     });
+   });
+   // 複数のプロパティから構成されるコンポーネント(climate等)
+@@ -158,7 +159,7 @@ export function buildDiscoveryConfig(apiDevice: ApiDevice): DiscoveryEntry[] {
+
+     discoveryEntries.push({
+       relativeTopic,
+-      payload: { ...payload, ...override },
++      payload: mergePayloadWithDelete(payload, override),
+     });
+   });
+
