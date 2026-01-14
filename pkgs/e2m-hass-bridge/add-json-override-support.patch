@@ -26,9 +26,8 @@ diff --git a/src/payload/builder.ts b/src/payload/builder.ts
 index 1234567..abcdefg 100644
 --- a/src/payload/builder.ts
 +++ b/src/payload/builder.ts
-@@ -1,4 +1,4 @@
--import { IgnorePropertyPatterns } from "@/deviceConfig";
-+import { IgnorePropertyPatterns } from "@/deviceConfig";
+@@ -1,4 +1,5 @@
+ import { IgnorePropertyPatterns } from "@/deviceConfig";
 +import { mergePayloadWithDelete } from "@/deviceConfigOverride";
  import env from "@/env";
  import logger from "@/logger";
