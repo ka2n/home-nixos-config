@@ -19,6 +19,10 @@ buildNpmPackage rec {
   npmDepsHash = "sha256-/OWSc/mIZqRMh9nXwxtDjbqG+JGOyF/btb5rJXzKz7Y=";
   makeCacheWritable = true;
 
+  patches = [
+    ./fix-power-distribution-board-coefficient.patch
+  ];
+
   # Add JSON override functionality
   postPatch = ''
     # Add import statement for readFileSync
