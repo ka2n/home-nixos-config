@@ -400,7 +400,7 @@
         };
       };
 
-      # リンナイ（ガスメータ、床暖房）
+      # リンナイ（ガスメータ、床暖房、給湯器）
       "000059" = {
         autoRequestProperties = {
           gasMeter = [
@@ -411,6 +411,9 @@
           floorHeater = [
             "operationStatus"      # 0x80 - オンオフ
             "setTemperature"       # 0xB3 - 設定温度
+          ];
+          hybridWaterHeater = [
+            "remainingWater"       # 0xE1 - 残湯量
           ];
         };
       };
