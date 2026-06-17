@@ -158,9 +158,12 @@
       };
 
       serial = {
-        port = "/dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_da0e4f7857c9eb119dfb8f4f1d69213e-if00-port0";
-        adapter = "zstack";
-        disable_led = true;
+        # SLZB-MR5Uの場所
+        port = "tcp://192.168.50.202:6638";
+        baudrate = 115200;
+        adapter = "ember";
+        # 緑色LEDを無効にしますか？
+        disable_led = false;
       };
 
       frontend = {
@@ -173,22 +176,12 @@
         channel = 15;
         pan_id = 6754;  # Existing network PAN ID
         last_seen = "ISO_8601";
+        # 出力パワーを最大20に設定
+        transmit_power = 20;
       };
 
       # Home Assistant integration
       homeassistant.enabled = true;
-    };
-  };
-
-  # Setup Zigbee USB device permissions (runs as root before zigbee2mqtt)
-  systemd.services.zigbee-usb-permissions = {
-    description = "Setup Zigbee USB device permissions";
-    wantedBy = [ "multi-user.target" ];
-    before = [ "zigbee2mqtt.service" ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-      ExecStart = "${pkgs.coreutils}/bin/chown zigbee2mqtt:zigbee2mqtt /dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_da0e4f7857c9eb119dfb8f4f1d69213e-if00-port0";
     };
   };
 
@@ -470,6 +463,9 @@
     age        # For sops-nix
     sops
   ];
+
+  # Nix store の自動最適化（重複ファイルをhardlink化して容量削減）
+  nix.optimise.automatic = true;
 
   # Tailscale
   services.tailscale.enable = true;
